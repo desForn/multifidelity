@@ -1,8 +1,0 @@
-INSTALL:
-    Run make from the current directory
-
-RUN:
-    Run any of the interpolation_. or quadrature_. programs.
-    In the .dat files the cost and error of each step of the surrogate
-    construction is shown
-
