@@ -1,0 +1,102 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2112                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _14aeaf8dab-20211220 OPENFOAM=2112 version=v2112
+Arch   : "LSB;label=32;scalar=64"
+Exec   : checkMesh
+Date   : Jan 14 2025
+Time   : 18:15:03
+Host   : clone-1-52
+PID    : 13357
+I/O    : uncollated
+Case   : /projects2/SZ/perello/MISC240919/platoon/system/meshes/s0f0
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+Time = 0
+
+Mesh stats
+    points:           110521
+    faces:            296114
+    internal faces:   279771
+    cells:            92913
+    faces per cell:   6.19811005995
+    boundary patches: 8
+    point zones:      1
+    face zones:       2
+    cell zones:       0
+
+Overall number of cells of each type:
+    hexahedra:     85542
+    prisms:        316
+    wedges:        0
+    pyramids:      0
+    tet wedges:    0
+    tetrahedra:    0
+    polyhedra:     7055
+    Breakdown of polyhedra by number of faces:
+        faces   number of cells
+            5   48
+            6   1018
+            7   144
+            9   5535
+           12   256
+           15   54
+
+Checking topology...
+    Boundary definition OK.
+    Cell to face addressing OK.
+    Point usage OK.
+    Upper triangular ordering OK.
+    Face vertices OK.
+    Number of regions: 1 (OK).
+
+Checking patch topology for multiply connected surfaces...
+                   Patch    Faces   Points                  Surface topology
+                   inlet       60       78  ok (non-closed singly connected)
+                  outlet       60       78  ok (non-closed singly connected)
+                  ground     5745     6120  ok (non-closed singly connected)
+                    left      165      204  ok (non-closed singly connected)
+                   right      165      204  ok (non-closed singly connected)
+                     top      396      442  ok (non-closed singly connected)
+                 bodyRef     4876     4890      ok (closed singly connected)
+                    body     4876     4890      ok (closed singly connected)
+
+Checking faceZone topology for multiply connected surfaces...
+                FaceZone    Faces   Points                  Surface topology
+    internalBoundaryAinternalBoundaryCutFaceZone     1784     1836  ok (non-closed singly connected)
+    internalBoundaryBinternalBoundaryCutFaceZone     1784     1836  ok (non-closed singly connected)
+
+Checking basic cellZone addressing...
+    No cellZones found.
+
+Checking geometry...
+    Overall domain bounding box (-50 -24 0) (82 24 20)
+    Mesh has 3 geometric (non-empty/wedge) directions (1 1 1)
+    Mesh has 3 solution (non-empty) directions (1 1 1)
+    Boundary openness (-4.74324695649e-20 2.94264414662e-18 -1.37940739991e-15) OK.
+    Max cell openness = 1.3493958159e-15 OK.
+    Max aspect ratio = 47.7086118946 OK.
+    Minimum face area = 5.64506350981e-05. Maximum face area = 16.  Face area magnitudes OK.
+    Min volume = 2.83605601185e-06. Max volume = 64.  Total volume = 126710.444638.  Cell volumes OK.
+    Mesh non-orthogonality Max: 44.8849547251 average: 9.66300401172
+    Non-orthogonality check OK.
+    Face pyramids OK.
+    Max skewness = 2.15846770976 OK.
+    Coupled point location match (average 0) OK.
+
+Mesh OK.
+
+End
+

@@ -1,0 +1,41 @@
+FoamFile
+{
+		version		2.0;
+		format		ascii;
+		class		volVectorField;
+		object		U;
+}
+
+dimensions			[0 1 -1 0 0 0 0];
+internalField		uniform (0.9961946980917455 0.08715574274765817 0);
+
+boundaryField
+{
+	"(inlet|left)"
+	{
+		type	fixedValue;
+		value	$internalField;
+	}
+
+	"(outlet|right)"
+	{
+		type	zeroGradient;
+	}
+
+	"(top|ground)"
+	{
+		type	symmetry;
+	}
+
+	"(body|bodyRef|stilts|stiltsRef)"
+	{
+		type	fixedValue;
+		value	uniform (0 0 0);
+}	
+
+	"proc.*"
+	{
+		type	processor;
+	}
+}
+

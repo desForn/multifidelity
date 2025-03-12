@@ -1,0 +1,172 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.0                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    class           dictionary;
+    location        "system";
+    object          controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application         simpleFoam;
+
+startFrom           latestTime;
+
+startTime           0;
+
+stopAt              endTime;
+
+endTime             6000;
+
+deltaT              1;
+
+writeControl        timeStep;
+
+writeInterval       6000;
+
+purgeWrite          1;
+
+writeFormat         binary;
+
+writePrecision      12;
+
+writeCompression    off;
+
+timeFormat          general;
+
+timePrecision       6;
+
+runTimeModifiable   yes;
+
+functions
+{
+    residuals
+    {
+        type                    solverInfo;
+        libs                    ("libutilityFunctionObjects.so");
+        enabled                 true;
+        writeControl            timeStep;
+        writeInterval           1;
+        fields                  (U p k omega);
+    }
+
+    minMax
+    {
+        type                    fieldMinMax;
+        libs                    ("libfieldFunctionObjects.so");
+        enabled                 true;
+        writeControl            outputTime;
+        log                     false;
+        mode                    component;
+        fields                  (U p k omega nut);
+    }
+
+    yplus
+    {
+        type                    yPlus;
+        libs                    ("libutilityFunctionObjects.so");
+        enabled                 true;
+        writeControl            outputTime;
+        log                     false;
+    }
+
+    wallStress
+    {
+        type                    wallShearStress;
+        libs                    ("libfieldFunctionObjects.so");
+        enabled                 true;
+        writeControl            outputTime;
+        log                     false;
+        patches                 (bodyRef body);
+    }
+
+    force
+    {
+        type                    forces;
+        libs                    ("libforces.so");
+        enabled                 true;
+        writeControl            timeStep;
+        writeInterval           1;
+        log                     false;
+        patches                 (bodyRef);
+        CofR                    (0 0 0);
+        rhoInf                  1.0;
+        rho                     rhoInf;
+    }
+
+    forceB
+    {
+        type                    forces;
+        libs                    ("libforces.so");
+        enabled                 true;
+        writeControl            timeStep;
+        writeInterval           1;
+        log                     false;
+        patches                 (body);
+        CofR                    (0 0 0);
+        rhoInf                  1.0;
+        rho                     rhoInf;
+    }
+        
+    average
+    {
+        type                    fieldAverage;
+        libs                    ("libfieldFunctionObjects.so");
+        enabled                 true;
+        writeControl            outputTime;
+        log                     false;
+        timeStart               3000;
+        timeEnd                 6000;
+        fields
+        (
+        U
+        {
+            mean                yes;
+            prime2Mean          no;
+            base                iteration;
+        }
+                
+        p
+        {
+            mean                yes;
+            prime2Mean          no;
+            base                iteration;
+        }
+        
+        k
+        {
+            mean                yes;
+            prime2Mean          no;
+            base                iteration;
+        }
+        
+        omega
+        {
+            mean                yes;
+            prime2Mean          no;
+            base                iteration;
+        }
+        
+        nut
+        {
+            mean                yes;
+            prime2Mean          no;
+            base                iteration;
+        }
+
+        wallShearStress
+        {
+            mean                yes;
+            prime2Mean          no;
+            base                iteration;
+        }
+        );
+    }
+}

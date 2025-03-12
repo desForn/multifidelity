@@ -1,0 +1,31 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createPatchDict;
+}
+
+constructFrom patch;
+
+sourceCase ".";
+
+sourcePatches (ground);
+
+exposedPatchName top;
+
+mergeFaces false;
+
+flipNormals false;
+
+extrudeModel linearNormal;
+
+nLayers 1;
+
+expansionRatio 1.0;
+
+linearNormalCoeffs
+{
+    thickness 1.0;
+}
+

@@ -1,0 +1,137 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2306                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _8fe025cb-20230831 OPENFOAM=2306 version=2306
+Arch   : "LSB;label=32;scalar=64"
+Exec   : surfaceFeatureExtract
+Date   : Mar 04 2025
+Time   : 13:30:04
+Host   : fedora
+PID    : 13156
+I/O    : uncollated
+Case   : /home/rafel/git/two_dimensional_flow/remeshing/data/0_0
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+
+Note: Feature line extraction only valid on closed manifold surfaces
+
+Reading surfaceFeatureExtractDict
+
+Surfaces     : inner.stl
+Output       : inner
+Load options : offset
+Write options: writeObj=yes writeVTK=off
+
+Statistics:
+Triangles    : 12 in 1 region(s)
+Vertices     : 8
+Bounding Box : (-0.5 -0.5 -1) (0.5 0.5 2)
+
+Constructing feature set from included angle 180
+Selecting edges based purely on geometric tests: no
+
+Initial Feature set:
+    points : 8
+    edges  : 18
+    of which
+        region edges   : 0
+        external edges : 12
+        internal edges : 6
+
+Final Feature set:
+    points : 8
+    of which
+        convex             : 2
+        concave            : 0
+        mixed              : 6
+        non-feature        : 0
+    edges  : 18
+    of which
+        external edges     : 12
+        internal edges     : 0
+        flat edges         : 6
+        open edges         : 0
+        multiply connected : 0
+
+Writing extendedFeatureEdgeMesh to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner.extendedFeatureEdgeMesh"
+
+Writing extendedEdgeMesh components to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner"
+Writing 2 convex feature points to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_convexFeaturePts.obj"
+Writing 0 concave feature points to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_concaveFeaturePts.obj"
+Writing 6 mixed feature points to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_mixedFeaturePts.obj"
+Writing 6 mixed feature point structure to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_mixedFeaturePtsStructure.obj"
+Writing 12 external edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_externalEdges.obj"
+Writing 0 internal edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_internalEdges.obj"
+Writing 6 flat edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_flatEdges.obj"
+Writing 0 open edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_openEdges.obj"
+Writing 0 multiple edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_multipleEdges.obj"
+Writing 0 region edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_regionEdges.obj"
+Writing 18 edge directions to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/inner_edgeDirections.obj"
+
+Writing featureEdgeMesh to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/triSurface/inner.eMesh"
+Surfaces     : outer_cylinder.stl
+Output       : outer_cylinder
+Load options : offset
+Write options: writeObj=yes writeVTK=off
+
+Statistics:
+Triangles    : 912 in 1 region(s)
+Vertices     : 458
+Bounding Box : (-15.9984941483 -15.9996232986 -1) (16 15.9996232986 2)
+
+Constructing feature set from included angle 180
+Selecting edges based purely on geometric tests: no
+
+Initial Feature set:
+    points : 458
+    edges  : 1368
+    of which
+        region edges   : 0
+        external edges : 786
+        internal edges : 582
+
+Final Feature set:
+    points : 458
+    of which
+        convex             : 41
+        concave            : 0
+        mixed              : 417
+        non-feature        : 0
+    edges  : 1368
+    of which
+        external edges     : 687
+        internal edges     : 0
+        flat edges         : 681
+        open edges         : 0
+        multiply connected : 0
+
+Writing extendedFeatureEdgeMesh to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder.extendedFeatureEdgeMesh"
+
+Writing extendedEdgeMesh components to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder"
+Writing 41 convex feature points to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_convexFeaturePts.obj"
+Writing 0 concave feature points to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_concaveFeaturePts.obj"
+Writing 417 mixed feature points to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_mixedFeaturePts.obj"
+Writing 417 mixed feature point structure to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_mixedFeaturePtsStructure.obj"
+Writing 687 external edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_externalEdges.obj"
+Writing 0 internal edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_internalEdges.obj"
+Writing 681 flat edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_flatEdges.obj"
+Writing 0 open edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_openEdges.obj"
+Writing 0 multiple edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_multipleEdges.obj"
+Writing 0 region edges to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_regionEdges.obj"
+Writing 1368 edge directions to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/extendedFeatureEdgeMesh/outer_cylinder_edgeDirections.obj"
+
+Writing featureEdgeMesh to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/triSurface/outer_cylinder.eMesh"
+ExecutionTime = 0.02 s  ClockTime = 0 s
+
+End
+

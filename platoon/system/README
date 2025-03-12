@@ -1,0 +1,31 @@
+FILE STRUCTURE:
+    The snapshots data is stored in ../data. Here we included only one
+    snapshot as example to save space.
+
+    The qoi extracted from all the data is stored in ./data in binary format.
+
+INSTALL:
+    Run the following commands from the current directory:
+        make
+        cd mesh_displacement
+        wmake
+
+    NOTE: wmake is an OpenFOAM command
+
+RUN:
+    The surrogates are constructed as follows:
+        ./platoon_truncation [n_levels]
+        ./platoon_richardson_extrapolation [n_levels]
+
+    n_levels is optional. If given the surrogate will add adaptively n_levels
+    and then stop. If not, the surrogate will keep adding levels until it
+    lacks some snapshots. In this case, the to compute them are automatically
+    generated.
+
+    The surrogate is represented in the files platoon_cs.dat,
+    where c ∈ {d, s, l} stands for the component of the force (drag, side and
+    lift) and s ∈ {0, 1, 2} stands for the leading vehicle geometry
+
+    In convergence.dat the cost and estimated relative error of each step is
+    shown.
+

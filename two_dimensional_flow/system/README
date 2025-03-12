@@ -1,0 +1,39 @@
+FILE STRUCTURE:
+    Two directories are present, one for the remeshing method and one for the
+    mapping. The snapshots are stored in
+        ../remeshing/data
+        ../mapping/data
+    We included only one snapshot as example to save space.
+
+INSTALL:
+    Run the following commands from the current directory:
+        make
+        cd mesh_displacement
+        wmake
+
+    NOTE: wmake is an OpenFOAM command
+
+RUN:
+    To construct the surrogate run:
+        ./smolyak_approximation ../remeshing/system/data [n_levels]
+        or
+        ./smolyak_approximation ../mapping/system/data [n_levels]
+
+        This will construct the surrogate until n_levels are added (if the
+        n_levels parameter is provided) or some unavailable snapshots
+        are required. They will be listed in ./missing_data.dat
+
+        surrogate.dat is a file with the QoI as a function of the theta parameter
+        sampled for 2000 points.
+
+    To compute the missing snapshots:
+        cd ../remeshing/system
+        bash snapshot.sh [fidelity_level] [angle_index]
+        or
+        cd ../remeshing/system
+        bash snapshot.sh [fidelity_level] [angle_index]
+
+        After new snapshots are computed, update the data files by running the
+        following command from the present directory
+            ./collect_data ../remeshing/
+

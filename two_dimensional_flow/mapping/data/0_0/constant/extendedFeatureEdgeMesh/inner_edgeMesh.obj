@@ -1,0 +1,37 @@
+# Wavefront OBJ file written 2025-03-04T13:29:01
+o inner_edgeMesh
+
+# points : 8
+# lines  : 18
+
+# <points count="8">
+v -0.5 0.5 2
+v 0.5 -0.5 -1
+v -0.5 -0.5 -1
+v -0.5 -0.5 2
+v -0.5 0.5 -1
+v 0.5 -0.5 2
+v 0.5 0.5 -1
+v 0.5 0.5 2
+# </points>
+
+# <edges count="18">
+l 3 4
+l 5 3
+l 1 5
+l 4 1
+l 6 2
+l 2 7
+l 7 8
+l 8 6
+l 3 2
+l 6 4
+l 7 5
+l 1 8
+l 4 5
+l 7 6
+l 6 3
+l 5 8
+l 7 3
+l 4 8
+# </edges>

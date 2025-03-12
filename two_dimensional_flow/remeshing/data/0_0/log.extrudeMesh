@@ -1,0 +1,57 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2306                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _8fe025cb-20230831 OPENFOAM=2306 version=2306
+Arch   : "LSB;label=32;scalar=64"
+Exec   : extrudeMesh
+Date   : Mar 04 2025
+Time   : 13:30:16
+Host   : fedora
+PID    : 13176
+I/O    : uncollated
+Case   : /home/rafel/git/two_dimensional_flow/remeshing/data/0_0
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+Selecting extrudeModel linearNormal
+Selected extrudeModel for linearNormal using coeffs 
+{
+    thickness       1;
+}
+
+Extruding from patch using model linearNormal
+Collapsing edges < 0.0001 of bounding box
+
+Extruding patches 1(ground) on mesh "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0"
+
+Create mesh for time = 0
+
+Adding overall 0 processor patches.
+Mesh bounding box : (-15.9984941483 -15.9988705046 -1) (15.9999997344 15.9988705045 0)
+        with span : (31.9984938827 31.9977410091 1)
+Merge distance    : 0.0001
+
+Collapsing edges < 0.0001 ...
+
+            Uncollapsed edges = 0 / 16629
+    Number of points : 6898
+    Not visited      : 0
+    Not collapsed    : 6898
+    Collapsed        : 0
+
+Collapsing 0 cells
+Writing mesh to "/home/rafel/git/two_dimensional_flow/remeshing/data/0_0/constant/region0"
+
+End
+
