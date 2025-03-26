@@ -79,6 +79,9 @@ namespace Smolyak
         using operator_map_type = std::unordered_map<level_type, operator_type, Core::hash>;
         using inner_product_map_type =
             std::unordered_map<std::array<level_type, 2>, real_t, Core::hash>;
+        using inner_product_coefficient_map_type =
+            std::unordered_map<std::array<level_type, 2>, std::tuple<real_t, integer_t>,
+                Core::hash>;
 
     public:
         using coordinates_set_type = std::unordered_set<primary_coordinate_type, Core::hash>;
@@ -92,7 +95,7 @@ namespace Smolyak
         const level_type traits_maximum_level_;
         level_type maximum_level_{Utility::uniform_array<index_t, n_variates>(negative_1)};
         operator_map_type nodes_{};
-        mutable inner_product_map_type inner_product_{};
+        inner_product_map_type inner_product_{};
 
         // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     public:
@@ -149,12 +152,12 @@ namespace Smolyak
     public:
         [[nodiscard]] std::set<primary_coordinate_type, decltype(Arithmetic::less())>
             coordinates() const;
-        [[nodiscard]] real_t norm() const;
+        [[nodiscard]] real_t norm();
         [[nodiscard]] real_t cost() const;
 
         // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     private:
-        [[nodiscard]] real_t inner_product(const level_type &, const level_type &) const;
+        void inner_product(inner_product_coefficient_map_type &);
 
         // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     private:
@@ -501,32 +504,36 @@ namespace Smolyak
     }
 
     template<class function_type, class cost_function_type, smolyak_traits_c... traits_types>
-    real_t smolyak_approximation<function_type, cost_function_type, traits_types...>::norm() const
+    real_t smolyak_approximation<function_type, cost_function_type, traits_types...>::norm()
     {
         real_t ret{0};
-        
+
+        inner_product_coefficient_map_type inner_products;
+
         for (const auto &i : nodes_)
         {
-            if (i.second.state() == node_state::unfitted)
+            if (i.second.coefficient() == 0)
                 continue;
-
             for (const auto &j : nodes_)
             {
-                if (j.second.state() == node_state::unfitted)
+                if (i.first > j.first or j.second.coefficient() == 0)
                     continue;
 
-                if (j.first < i.first)
-                    continue;
-
-                real_t a = inner_product(i.first, j.first) *
-                        i.second.coefficient() * j.second.coefficient();
-
-                if (j.first != i.first)
-                    a *= 2;
-                ret += a;
+                integer_t c = i.second.coefficient() * j.second.coefficient();
+                
+                if (i.first != j.first)
+                    c *= 2;
+                
+                inner_products.emplace(std::array{i.first, j.first},
+                                       std::tuple<real_t, integer_t>{-1, c});
             }
         }
 
+        inner_product(inner_products);
+
+        for (const auto &i : inner_products)
+            ret += std::get<0>(i.second) * std::get<1>(i.second);
+        
         ASSERT_ASSUME(Arithmetic::less()(0, ret));
         if (ret > 0) [[likely]]
             return std::sqrt(ret);
@@ -547,26 +554,104 @@ namespace Smolyak
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     template<class function_type, class cost_function_type, smolyak_traits_c... traits_types>
-    real_t smolyak_approximation<function_type, cost_function_type, traits_types...>::
-        inner_product(const level_type &arg0, const level_type &arg1) const
+    void smolyak_approximation<function_type, cost_function_type, traits_types...>::
+        inner_product(inner_product_coefficient_map_type &arg)
     {
-        ASSERT_ASSUME(arg0 <= arg1);
+#ifdef SMOLYAK_N_THREADS
+        const index_t n_threads = SMOLYAK_N_THREADS;
+#else
+        const index_t n_threads = std::thread::hardware_concurrency();
+#endif
+        if (n_threads == 1 or std::size(arg) < 2)
+        {
+            for (auto &i : arg)
+            {
+                const level_type &level_0 = i.first[0];
+                const level_type &level_1 = i.first[1];
 
-        std::array<level_type, 2> key{arg0, arg1};
+                ASSERT_ASSUME(level_0 <= level_1);
 
-        auto it = inner_product_.find(key);
-        if (it != std::end(inner_product_))
-            return it->second;
+                auto it = inner_product_.find(i.first);
+                if (it != std::end(inner_product_))
+                    std::get<0>(i.second) = it->second;
+                else
+                {
+                    auto it_0 = nodes_.find(level_0);
+                    auto it_1 = nodes_.find(level_1);
 
-        auto it0 = nodes_.find(arg0);
-        auto it1 = nodes_.find(arg1);
+                    ASSERT_ASSUME(it_0 != std::end(nodes_) and it_1 != std::end(nodes_));
 
-        ASSERT_ASSUME(it0 != std::end(nodes_) and it1 != std::end(nodes_));
+                    real_t res = it_0->second.inner_product(it_1->second);
+                    inner_product_.emplace(i.first, res);
+                    std::get<0>(i.second) = res;
+                }
+            }
+        }
 
-        real_t ret = it0->second.inner_product(it1->second);
+        else
+        {
+            std::vector<std::tuple<std::array<level_type, 2>, real_t &>> work_to_do;
 
-        inner_product_[key] = ret;
-        return ret;
+            for (auto &i : arg)
+            {
+                auto it = inner_product_.find(i.first);
+                if (it != std::end(inner_product_))
+                    std::get<0>(i.second) = it->second;
+                else
+                {
+                    std::get<0>(inner_product_.emplace
+                            (i.first, std::numeric_limits<real_t>::signaling_NaN()));
+                    work_to_do.emplace_back(i.first, std::get<0>(i.second));
+                }
+            }
+
+            auto work = [this]
+                (std::vector<std::tuple<std::array<level_type, 2>, real_t &>>::iterator begin,
+                 std::vector<std::tuple<std::array<level_type, 2>, real_t &>>::iterator end)
+            {
+                for (; begin != end; ++begin)
+                {
+                    auto it_0 = nodes_.find(std::get<0>(*begin)[0]);
+                    auto it_1 = nodes_.find(std::get<0>(*begin)[1]);
+
+                    ASSERT_ASSUME(it_0 != std::end(nodes_) and it_1 != std::end(nodes_));
+
+                    real_t res = it_0->second.inner_product(it_1->second);
+                    std::get<1>(*begin) = res;
+                    inner_product_[std::get<0>(*begin)] = res;
+                }
+
+                return;
+            };
+
+            index_t q = std::size(work_to_do) / n_threads;
+            index_t r = std::size(work_to_do) % n_threads;
+
+            std::vector<std::thread> threads;
+            
+            auto i = std::begin(work_to_do);
+
+            while (i != std::end(work_to_do))
+            {
+                auto j = i + q;
+                if (r != 0)
+                {
+                    ++j;
+                    --r;
+                }
+
+                if (i == j)
+                    break;
+
+                threads.emplace_back(std::thread{work, i, j});
+                i = j;
+            }
+
+            for (auto &i : threads)
+                i.join();
+        }
+
+        return;
     }
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
@@ -584,8 +669,10 @@ namespace Smolyak
                 node = nodes_.emplace(arg, operator_type{arg, traits_initialiser_}).first;
         }
 
-        if (node->second.state() == node_state::unfitted)
-            node->second.fit(function_, cost_function_); // May throw missing_data
+        if (node->second.state() != node_state::unfitted)
+            return;
+
+        node->second.fit(function_, cost_function_); // May throw missing_data
 
         std::unordered_map<level_type, integer_t, Core::hash> coefficients_predecessors;
         for (const level_type &a : Utility::counter{incremental_})
@@ -600,18 +687,27 @@ namespace Smolyak
             coefficients_predecessors[al] = c;
         }
 
-        real_t norm = 0;
+        inner_product_coefficient_map_type inner_products;
         for (const auto &i : coefficients_predecessors)
             for (const auto &j : coefficients_predecessors)
             {
-                if (i.first > j.first)
+                integer_t c = i.second * j.second;
+
+                if (i.first > j.first or c == 0)
                     continue;
-                real_t c = inner_product(i.first, j.first) * i.second * j.second;
-                if (i.first == j.first)
-                    norm += c;
-                else
-                    norm += 2 * c;
+
+                if (i.first != j.first)
+                    c *= 2;
+
+                inner_products.emplace(std::array{i.first, j.first},
+                                      std::tuple<real_t, integer_t>{-1, c});
             }
+
+        inner_product(inner_products);
+
+        real_t norm = 0;
+        for (const auto &i : inner_products)
+            norm += std::get<0>(i.second) * std::get<1>(i.second);
 
         ASSERT_ASSUME(Arithmetic::less()(0, norm));
         if (norm < 0)
@@ -1017,18 +1113,26 @@ namespace Smolyak
         ASSERT_ASSUME(optimal_level != level_type{});
         activate_node(optimal_level);
 
-        real_t error_estimation = 0;
+        inner_product_coefficient_map_type inner_products;
         for (const auto &i : coefficients_estimation)
             for (const auto &j : coefficients_estimation)
             {
-                if (i.first > j.first)
+                integer_t c = i.second * j.second;
+                if (i.first > j.first or c == 0)
                     continue;
-                real_t c = inner_product(i.first, j.first) * i.second * j.second;
-                if (i.first == j.first)
-                    error_estimation += c;
-                else
-                    error_estimation += 2 * c;
+
+                if (i.first != j.first)
+                    c *= 2;
+
+                inner_products.emplace(std::array{i.first, j.first},
+                                       std::tuple<real_t, integer_t>{-1, c});
             }
+
+        inner_product(inner_products);
+
+        real_t error_estimation = 0;
+        for (const auto &i : inner_products)
+            error_estimation += std::get<0>(i.second) * std::get<1>(i.second);
 
         ASSERT_ASSUME(Arithmetic::less()(0, error_estimation));
         if (error_estimation < 0)
