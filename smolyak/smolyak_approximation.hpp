@@ -590,62 +590,49 @@ namespace Smolyak
 
         else
         {
-            std::vector<std::tuple<std::array<level_type, 2>, real_t &>> work_to_do;
+            std::vector<std::vector<std::tuple<std::array<level_type, 2>, real_t &>>>
+                work_per_thread(n_threads);
+            auto it = std::begin(work_per_thread);
 
             for (auto &i : arg)
             {
-                auto it = inner_product_.find(i.first);
-                if (it != std::end(inner_product_))
-                    std::get<0>(i.second) = it->second;
+                auto it_ = inner_product_.find(i.first);
+                if (it_ != std::end(inner_product_))
+                    std::get<0>(i.second) = it_->second;
                 else
                 {
                     std::get<0>(inner_product_.emplace
                             (i.first, std::numeric_limits<real_t>::signaling_NaN()));
-                    work_to_do.emplace_back(i.first, std::get<0>(i.second));
+                    it->emplace_back(i.first, std::get<0>(i.second));
+                    ++it;
+                    if (it == std::end(work_per_thread))
+                        it = std::begin(work_per_thread);
                 }
             }
 
-            auto work = [this]
-                (std::vector<std::tuple<std::array<level_type, 2>, real_t &>>::iterator begin,
-                 std::vector<std::tuple<std::array<level_type, 2>, real_t &>>::iterator end)
+            auto work = [this](const std::vector<
+                    std::tuple<std::array<level_type, 2>, real_t &>> &levels)
             {
-                for (; begin != end; ++begin)
+                for (const auto &i : levels)
                 {
-                    auto it_0 = nodes_.find(std::get<0>(*begin)[0]);
-                    auto it_1 = nodes_.find(std::get<0>(*begin)[1]);
+                    auto it_0 = nodes_.find(std::get<0>(i)[0]);
+                    auto it_1 = nodes_.find(std::get<0>(i)[1]);
 
                     ASSERT_ASSUME(it_0 != std::end(nodes_) and it_1 != std::end(nodes_));
 
                     real_t res = it_0->second.inner_product(it_1->second);
-                    std::get<1>(*begin) = res;
-                    inner_product_[std::get<0>(*begin)] = res;
+                    std::get<1>(i) = res;
+                    inner_product_[std::get<0>(i)] = res;
                 }
 
                 return;
             };
 
-            index_t q = std::size(work_to_do) / n_threads;
-            index_t r = std::size(work_to_do) % n_threads;
-
             std::vector<std::thread> threads;
-            
-            auto i = std::begin(work_to_do);
 
-            while (i != std::end(work_to_do))
-            {
-                auto j = i + q;
-                if (r != 0)
-                {
-                    ++j;
-                    --r;
-                }
-
-                if (i == j)
-                    break;
-
-                threads.emplace_back(std::thread{work, i, j});
-                i = j;
-            }
+            for (const auto &i : work_per_thread)
+                if (std::size(i) != 0)
+                    threads.emplace_back(std::thread{work, std::ref(i)});
 
             for (auto &i : threads)
                 i.join();
