@@ -16,7 +16,7 @@ namespace Arithmetic
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
     template<class type>
-    concept real_complex_c = std::is_same_v<std::remove_cvref_t<type>, real_t> or
+    concept real_complex_c = std::floating_point<std::remove_cvref_t<type>> or
                              std::is_same_v<std::remove_cvref_t<type>, complex_t>;
 
     template<class type>

@@ -56,11 +56,12 @@ namespace Platoon
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
     using sampling_type = Sampling::exponential<Sampling::chebyshev_lobatto>;
-    using richardson_extrapolation_sampling_type = Sampling::exponential_refinement<0.5, 1>;
+    using richardson_extrapolation_sampling_type =
+        Sampling::exponential_refinement<static_cast<real_t>(0.5), 1>;
 
     using fidelity_traits = Smolyak::Smolyak_traits::multifidelity<>;
     using richardson_extrapolation_traits = Smolyak::Smolyak_traits::
-            multifidelity_richardson_extrapolation<0.5>;
+            multifidelity_richardson_extrapolation<static_cast<real_t>(0.5)>;
     using interpolation_traits = Smolyak::Smolyak_traits::polynomial_interpolation<sampling_type>;
     using matrix_traits = Smolyak::Smolyak_traits::matrix<true>;
     using matrix_traits_initialiser = Smolyak::Smolyak_traits::matrix_initialiser;

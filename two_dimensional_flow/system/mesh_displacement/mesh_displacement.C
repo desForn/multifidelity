@@ -71,7 +71,8 @@ int main(int argc, char *argv[])
 
 	forAll(mesh.points(), iPoint)
 	{
-	    double r = std::sqrt(std::pow(mesh.points()[iPoint][0], 2) + std::pow(mesh.points()[iPoint][1], 2));
+	    double r = std::sqrt(std::pow(mesh.points()[iPoint][0], 2) +
+                std::pow(mesh.points()[iPoint][1], 2));
 		points[iPoint] = rotate(mesh.points()[iPoint], angle(r, a));
 	}
 	

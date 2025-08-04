@@ -1,3 +1,7 @@
+INFO:
+    This programs construct a multifidelity Smolyak approximation of the drag,
+    side and lift force acting on a car in platoon.
+
 FILE STRUCTURE:
     The snapshots data is stored in ../data. Here we included only one
     snapshot as example to save space.
@@ -29,3 +33,6 @@ RUN:
     In convergence.dat the cost and estimated relative error of each step is
     shown.
 
+    Additionally
+        ./time
+    is provided for performance measurements of the code.

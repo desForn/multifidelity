@@ -152,9 +152,7 @@ namespace Matrix
 
         // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     public:
-        field_type &operator*() { return *(*pointer); }
-        const field_type &operator*() const
-            { return *const_cast<field_type &>(*this); }
+        field_type &operator*() const { return *(*pointer); }
 
         field_type *operator->() { return std::addressof(*(*this)); }
         const field_type * operator->() const { return std::addressof(*(*this)); }

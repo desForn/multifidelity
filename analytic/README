@@ -1,8 +1,15 @@
-INSTALL:
-    Run make from the current directory
+INFO:
+    This programs construct a series of Smolyak approximation surrogates of
+    analytical functions to validate theoretical convergence bounds.
 
-RUN:
-    Run any of the interpolation_. or quadrature_. programs.
-    In the .dat files the cost and error of each step of the surrogate
-    construction is shown
+    The interpolation_* programs perform a monofidelity approach while the
+    quadrature_* use several multifidelity schemes.
+
+INSTALL:
+    Run make from the current directory.
+
+OUTPUT:
+    After running any of the interpolation_. or quadrature_. programs,
+    in the .dat files the cost and error of each step of the surrogate
+    construction is shown.
 

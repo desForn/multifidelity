@@ -21,6 +21,7 @@ namespace Disk
     }
 
     template<class first_type, class... other_types>
+    requires(sizeof...(other_types) != 0)
     void read(std::ifstream &file, first_type &first_value,
         other_types &... other_values)
     {

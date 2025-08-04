@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
         (function, cost_function, std::tuple{component_initialiser, geometry_initialiser});
 
     smolyak_approximation_.maximum_level() = std::array<index_t, 6>
-            {0, 2, 1, negative_1, negative_1, negative_1};
+            {0, 2, 0, negative_1, negative_1, negative_1};
 
     std::vector<real_t> norms, error_estimation, cost;
     try
@@ -101,6 +101,7 @@ int main(int argc, char* argv[])
     }
 
     // Surfaces
+    /*
     std::array<char, 3> components_c{'d', 's', 'l'};
     constexpr index_t n_elements = 30;
 
@@ -132,6 +133,7 @@ int main(int argc, char* argv[])
             f.close();
         }
 
+    */
     // Histograms
     /*const auto &nodes{smolyak_approximation_.nodes()};
 

@@ -1,9 +1,20 @@
+INFO:
+    This programs construct a multifidelity Smolyak approximation of the drag
+    force acting on a rotated square on small Reynolds number.
+
+    The goal of the example is to show that a remeshing process may introduce
+    spurious oscillations on the multifidelity surrogate.
+
 FILE STRUCTURE:
     Two directories are present, one for the remeshing method and one for the
     mapping. The snapshots are stored in
         ../remeshing/data
         ../mapping/data
-    We included only one snapshot as example to save space.
+    We included only one snapshot in each data folder as example to save space.
+    The QoI of all computed snapshots is at ../[remeshing or mapping]/system/data
+
+    Additional snapshots may be computed running 
+        bash ../[remeshing or mapping]/system/snapshot.sh arg0 arg1
 
 INSTALL:
     Run the following commands from the current directory:
@@ -15,9 +26,7 @@ INSTALL:
 
 RUN:
     To construct the surrogate run:
-        ./smolyak_approximation ../remeshing/system/data [n_levels]
-        or
-        ./smolyak_approximation ../mapping/system/data [n_levels]
+        ./smolyak_approximation ../[remeshing or mapping]/system/data [n_levels]
 
         This will construct the surrogate until n_levels are added (if the
         n_levels parameter is provided) or some unavailable snapshots

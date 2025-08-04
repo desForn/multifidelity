@@ -126,7 +126,7 @@ namespace Disk
         (std::ifstream &file, Platoon::snapshot_data &value)
     {
         Arithmetic::index_t component, fidelity, geometry, spacing_index, yaw_index, reynolds_index;
-        Arithmetic::real_t qoi, cost;
+        double qoi, cost;
 
         Disk::read(file, component);
         Disk::read(file, fidelity);
@@ -138,8 +138,8 @@ namespace Disk
         Disk::read(file, cost);
 
         value = Platoon::snapshot_data
-            {component, fidelity, geometry, spacing_index, yaw_index,
-            reynolds_index, qoi, cost};
+            {component, fidelity, geometry, spacing_index, yaw_index, reynolds_index,
+             static_cast<Arithmetic::real_t>(qoi), static_cast<Arithmetic::real_t>(cost)};
 
         return;
     }
@@ -154,8 +154,8 @@ namespace Disk
         Disk::write(file, value.spacing_index());
         Disk::write(file, value.yaw_index());
         Disk::write(file, value.reynolds_index());
-        Disk::write(file, value.qoi());
-        Disk::write(file, value.cost());
+        Disk::write(file, static_cast<double>(value.qoi()));
+        Disk::write(file, static_cast<double>(value.cost()));
 
         return;
     }
@@ -169,12 +169,11 @@ namespace Platoon
     class snapshot_invocable
     {
     private:
-        static constexpr std::array<std::array<real_t, 2>, 3>
-            normalisation_factors_
-        {0.142089, 0.155349, 0.210775, -0.00213132, 0.110602, -0.0666261};
+        static constexpr std::array<std::array<real_t, 2>, 3> normalisation_factors_
+        {std::array<real_t, 2>{0.142089, 0.155349}, std::array<real_t, 2>{0.210775, -0.00213132}, std::array<real_t, 2>{0.110602, -0.0666261}};
     public:
         using invocable_type = Invocable::invocable_disk_binary_tree
-            <std::array<real_t, 4>(index_t, index_t, real_t, real_t, real_t)>;
+            <std::array<double, 4>(index_t, index_t, double, double, double)>;
 
         // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     private:
@@ -201,7 +200,15 @@ namespace Platoon
         std::array<real_t, 4> operator()(index_t fidelity, index_t geometry, real_t spacing,
             real_t yaw, real_t reynolds)
         {
-            return binary_tree_(fidelity, geometry, spacing, yaw, reynolds);
+            std::array<double, 4> array = binary_tree_(fidelity, geometry,
+                static_cast<double>(spacing), static_cast<double>(yaw),
+                static_cast<double>(reynolds));
+
+            std::array<real_t, 4> ret;
+
+            std::copy(std::cbegin(array), std::cend(array), std::begin(ret));
+
+            return ret;
         }
 
         auto qoi_function()
@@ -226,3 +233,4 @@ namespace Platoon
         }
     };
 }
+

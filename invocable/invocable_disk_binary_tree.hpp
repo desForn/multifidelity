@@ -13,10 +13,12 @@ namespace Invocable
         {
         public:
             template<class type>
+            requires(not std::floating_point<type>)
             constexpr bool operator()(const type &arg0, const type& arg1) const
                 { return arg0 < arg1; }
 
-            constexpr bool operator()(const real_t &arg0, const real_t &arg1) const
+            template<std::floating_point type>
+            constexpr bool operator()(const type &arg0, const type &arg1) const
             {
                 static constexpr auto l = Arithmetic::less(-Arithmetic::default_tolerance);
 
@@ -30,9 +32,9 @@ namespace Invocable
                 return less_tuple<0, types...>(arg0, arg1);
             }
 
-            template<index_t n>
+            template<index_t n, class type>
             constexpr bool operator()
-                (const std::array<real_t, n> &arg0, const std::array<real_t, n> &arg1) const
+                (const std::array<type, n> &arg0, const std::array<type, n> &arg1) const
             {
                 for (index_t i = 0; i != n; ++i)
                 {
@@ -82,9 +84,6 @@ namespace Invocable
     private:
         using pair_type = std::pair<key_type, std::remove_cvref_t<output_type>>;
 
-    public:
-        using read_function_type = std::function<void(std::ifstream &, pair_type &)>;
-
         // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     private:
         std::string data_file_;
@@ -105,7 +104,9 @@ namespace Invocable
             invocable_disk_binary_tree
                 {std::move(data_file), Disk::read<pair_type>, invocable<signature_type>{}} {}
             
-        invocable_disk_binary_tree(std::string data_file, const read_function_type &read_function) :
+        template<class read_function_type>
+        invocable_disk_binary_tree(std::string data_file, const read_function_type &read_function)
+        requires(std::invocable<read_function_type, std::ifstream &, pair_type &>) :
             invocable_disk_binary_tree
                 {std::move(data_file), read_function, invocable<signature_type>{}} {}
 
@@ -113,9 +114,11 @@ namespace Invocable
             invocable_disk_binary_tree
                 {std::move(data_file), Disk::read<pair_type>, invocable<signature_type>{}} {}
 
+        template<class read_function_type>
         invocable_disk_binary_tree
             (std::string data_file, const read_function_type &read_function,
-             invocable<signature_type>) :
+             invocable<signature_type>)
+            requires(std::invocable<read_function_type, std::ifstream &, pair_type &>) :
                 data_file_{std::move(data_file)}
         {        
             std::ifstream file(data_file_, std::ios::binary);
@@ -159,15 +162,8 @@ namespace Invocable
 
         invocable_disk_binary_tree &clear() { table_.clear(); return *this; }
     };
-
-    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
-    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
-
-    template<class signature_type>
-    invocable_disk_binary_tree(std::string, invocable<signature_type>) ->
-    invocable_disk_binary_tree<signature_type>;
-
-    template<class signature_type, class read_function_type>
-    invocable_disk_binary_tree(std::string, read_function_type, invocable<signature_type>) ->
-    invocable_disk_binary_tree<signature_type>;
 }
+
+// **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+// **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+
