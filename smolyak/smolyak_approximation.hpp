@@ -371,8 +371,8 @@ namespace Smolyak
         <function_type, cost_function_type, traits_types...>::traits_maximum_level
         (const traits_initialiser_type &arg) requires(not void_initialiser)
     {
-        static_assert(i < n_variates and j < std::tuple_size_v<traits_initialiser_type> and
-            (i != 0 or j == 0));
+        static_assert(i < n_variates and
+                (j == negative_1 or j < std::tuple_size_v<traits_initialiser_type>));
 
         using traits_type = Utility::get_type<i, traits_types...>;
         using ret_type = std::array<index_t, i + 1>;
@@ -417,6 +417,8 @@ namespace Smolyak
         }
         else
         {
+            static_assert(j != negative_1);
+
             if constexpr (max_level_c)
             {
                 traits_type traits{0, std::get<j>(arg)};
