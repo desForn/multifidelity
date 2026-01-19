@@ -1154,8 +1154,8 @@ namespace Smolyak
         traits_factory(const level_type &arg0, const traits_initialiser_type &arg1)
         requires(not void_initialiser)
     {
-        static_assert(i < n_variates and j < std::tuple_size_v<traits_initialiser_type> and
-            (i != 0 or j == 0));
+        static_assert(i < n_variates and
+                (j == negative_1 or j < std::tuple_size_v<traits_initialiser_type>));
 
         using traits_type = Utility::get_type<i, traits_types...>;
         index_t level = std::get<i>(arg0);
@@ -1211,9 +1211,10 @@ namespace Smolyak
             u = Invocable::evaluate(arg0, coordinates);
         }
 
-        catch (missing_data &e)
+        catch (Core::missing_data<std::vector<primary_coordinate_type>> &e)
         {
-            missing_data_.data().merge(e.data());
+            for (const auto &i : e.data())
+                missing_data_.data().insert(i);
         }
 
         try
@@ -1221,15 +1222,16 @@ namespace Smolyak
             c = Invocable::evaluate(arg1, new_coordinates);
         }
 
-        catch (missing_data &e)
+        catch (Core::missing_data<std::vector<primary_coordinate_type>> &e)
         {
-            missing_data_.data().merge(e.data());
+            for (const auto &i : e.data())
+                missing_data_.data().insert(i);
         }
 
         if (not std::empty(missing_data_.data()))
             throw missing_data_;
 
-        cost_ = std::accumulate(std::cbegin(c), std::cend(c), 0);
+        cost_ = std::accumulate(std::cbegin(c), std::cend(c), real_t{0});
         apply_linear_operator(u, v_, 1);
 
         node_state_ = node_state::inactive;
