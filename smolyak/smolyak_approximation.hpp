@@ -712,9 +712,13 @@ namespace Smolyak
     void smolyak_approximation<function_type, cost_function_type, traits_types...>::
         activate_node_apparatus(const level_type &arg)
     {
-        operator_type &node = nodes_.find(arg)->second;
+        auto node_it = nodes_.find(arg);
+        if (node_it == std::cend(nodes_))
+            return;
 
-        if (node.state() == node_state::active)
+        operator_type &node = node_it->second;
+
+        if (node.state() != node_state::inactive)
             return;
 
         for (const level_type &a : Utility::counter(incremental_))
@@ -838,7 +842,16 @@ namespace Smolyak
     auto smolyak_approximation<function_type, cost_function_type, traits_types...>::activate_nodes
         (level_set_type arg) -> smolyak_approximation &
     {
-        fit_nodes(arg);
+        missing_data missing_data_;
+        try
+        {
+            fit_nodes(arg);
+        }
+
+        catch (missing_data &e)
+        {
+            missing_data_.data().merge(e.data());
+        }
 
         for (auto it = std::begin(arg); it != std::end(arg);)
         {
@@ -848,7 +861,9 @@ namespace Smolyak
                 continue;
             }
 
-            if (nodes_.find(*it)->second.state() == node_state::active)
+            auto node_it = nodes_.find(*it);
+            if (node_it != std::end(nodes_) and
+                node_it->second.state() != node_state::inactive)
                 it = arg.erase(it);
             else
                 ++it;
@@ -865,15 +880,30 @@ namespace Smolyak
                 level_type predecessor = level;
                 --predecessor[i];
 
-                if (nodes_.find(predecessor)->second.state() == node_state::inactive)
+                auto node_it = nodes_.find(predecessor);
+                ASSERT_ASSUME(node_it != std::end(nodes_));
+                if (node_it->second.state() != node_state::active)
                     inactive_predecessors.emplace(predecessor);
             }
 
         if (not std::empty(inactive_predecessors))
-            activate_nodes(std::move(inactive_predecessors));
+        {
+            try
+            {
+                activate_nodes(std::move(inactive_predecessors));
+            }
+
+            catch (missing_data &e)
+            {
+                missing_data_.data().merge(e.data());
+            }
+        }
 
         for (const level_type &level : arg)
             activate_node_apparatus(level);
+
+        if (not std::empty(missing_data_.data()))
+            throw missing_data_;
 
         return *this;
     }
