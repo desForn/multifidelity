@@ -24,6 +24,11 @@ namespace Smolyak::Smolyak_traits
 
         class embedding_type;
         class dual_embedding_type;
+        template<class function_type>
+        class integrate_homomorphism_type;
+
+    private:
+        static constexpr auto one_function = [](real_t) -> real_t { return 1; };
 
         // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     private:
@@ -64,6 +69,25 @@ namespace Smolyak::Smolyak_traits
             { return embedding_type{destination_level}; }
         dual_embedding_type dual_embedding(index_t destination_level) const
             { return dual_embedding_type{destination_level};}
+        integrate_homomorphism_type<decltype(one_function)> integrate_homomorphism() const
+            { return integrate_homomorphism_type<decltype(one_function)>{one_function, 0}; }
+        integrate_homomorphism_type<decltype(one_function)> integrate_homomorphism
+            (index_t increased_accuracy) const
+            { return integrate_homomorphism_type<decltype(one_function)>
+                {one_function, increased_accuracy}; }
+        template<class invocable_type>
+        requires(Invocable::invocable_c<invocable_type, real_t(real_t)>)
+        integrate_homomorphism_type<invocable_type> integrate_homomorphism
+            (invocable_type &&invocable) const
+            { return integrate_homomorphism_type{std::forward<invocable_type>(invocable)}; }
+        template<class invocable_type>
+        requires(Invocable::invocable_c<invocable_type, real_t(real_t)>)
+        integrate_homomorphism_type<invocable_type> integrate_homomorphism
+        (invocable_type &&invocable, index_t increased_accuracy) const
+        {
+            return integrate_homomorphism_type
+                {std::forward<invocable_type>(invocable), increased_accuracy};
+        }
     };
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
@@ -133,6 +157,44 @@ namespace Smolyak::Smolyak_traits
             (index_t, index_t, std::span<const field_type>, std::span<field_type>) const;
         index_t input_size(index_t level) const { return sampling_type::n_points(level); }
         index_t output_size(index_t) const { return output_size_; }
+    };
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+
+    template<Sampling::sampling_c sampling_type, bool incremental>
+    template<class function_t>
+    class polynomial_interpolation<sampling_type, incremental>::integrate_homomorphism_type
+    {
+        static_assert(Invocable::invocable_c<function_t, real_t(real_t)>);
+    public:
+        using quadrature_type = Polynomial::quadrature_weights<sampling_type>;
+        using function_type = function_t;
+
+    private:
+        const function_type function_;
+        mutable std::unordered_map<index_t, polynomial_type> interpolated_function_{};
+        index_t increased_accuracy_;
+
+    public:
+        integrate_homomorphism_type() = delete;
+        ~integrate_homomorphism_type() = default;
+
+        integrate_homomorphism_type(const integrate_homomorphism_type &) = default;
+        integrate_homomorphism_type &operator=(const integrate_homomorphism_type &) = default;
+
+        integrate_homomorphism_type(integrate_homomorphism_type &&) noexcept = default;
+        integrate_homomorphism_type &operator=(integrate_homomorphism_type &&) noexcept = default;
+
+        integrate_homomorphism_type(function_type function, index_t increased_accuracy = 0) :
+            function_{std::move(function)}, increased_accuracy_{increased_accuracy} {}
+
+        // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    public:
+        void operator()
+            (index_t, index_t, std::span<const field_type>, std::span<field_type>) const;
+        index_t input_size(index_t level) const { return sampling_type::n_points(level); }
+        index_t output_size(index_t) const { return 1; }
     };
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
@@ -281,6 +343,75 @@ namespace Smolyak::Smolyak_traits
 
         return;
     }
+
+    template<Sampling::sampling_c sampling_type, bool incremental>
+    template<class function_t>
+    void polynomial_interpolation<sampling_type, incremental>::
+        integrate_homomorphism_type<function_t>::operator()
+        (index_t level, index_t stride, std::span<const field_type> input_span,
+        std::span<field_type> output_span) const
+    {
+        ASSERT_ASSUME(std::size(input_span) == (input_size(level) - 1) * stride + 1);
+        ASSERT_ASSUME(std::size(output_span) == 1);
+
+        auto interpolated_function = interpolated_function_.find(level + increased_accuracy_);
+
+        if (interpolated_function == std::cend(interpolated_function_))
+        {
+            auto emplaced = interpolated_function_.emplace(
+                level + increased_accuracy_,
+                polynomial_type{function_, level + increased_accuracy_});
+            ASSERT_ASSUME(std::get<1>(emplaced));
+            interpolated_function = std::get<0>(emplaced);
+        }
+
+        auto a = std::ranges::stride_view{input_span, static_cast<long int>(stride)};
+        proxy_polynomial_type q{a, level};
+
+        const quadrature_type &quadrature = quadrature_type::factory(level + increased_accuracy_);
+
+        auto it = std::begin(output_span);
+
+        const auto &f = std::get<1>(*interpolated_function).f();
+        if (increased_accuracy_ == 0)
+        {
+            const auto &qf = q.f();
+            ASSERT_ASSUME(std::size(f) == std::size(qf) and std::size(f) == input_size(level));
+
+            *it = 0;
+            for (index_t i = 0; i != std::size(f); ++i)
+            {
+                if constexpr (std::same_as<field_type, complex_t>)
+                    *it += f[i] * quadrature[i] * std::conj(qf[i]);
+                else
+                    *it += f[i] * quadrature[i] * qf[i];
+            }
+        }
+
+        else
+        {
+            sampling_type sampling = sampling_type::factory(level + increased_accuracy_);
+            ASSERT_ASSUME(sampling.n_points() == std::size(f));
+            *it = 0;
+            index_t c = 0;
+
+            for (const auto &i : sampling)
+            {
+                if constexpr (std::same_as<field_type, complex_t>)
+                    *it += f[c] * quadrature[c] * std::conj(q(i));
+                else
+                    *it += f[c] * quadrature[c] * q(i);
+                    
+                ++c;
+            }
+        }
+
+        return;
+    }
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+
 }
 
 // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //

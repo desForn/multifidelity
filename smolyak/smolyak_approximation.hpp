@@ -559,12 +559,7 @@ namespace Smolyak
     void smolyak_approximation<function_type, cost_function_type, traits_types...>::
         inner_product(inner_product_coefficient_map_type &arg)
     {
-#ifdef SMOLYAK_N_THREADS
-        const index_t n_threads = SMOLYAK_N_THREADS;
-#else
-        const index_t n_threads = std::thread::hardware_concurrency();
-#endif
-        if (n_threads == 1 or std::size(arg) < 2)
+        if (Smolyak::n_threads == 1 or std::size(arg) < 2)
         {
             for (auto &i : arg)
             {
@@ -593,7 +588,7 @@ namespace Smolyak
         else
         {
             std::vector<std::vector<std::tuple<std::array<level_type, 2>, real_t &>>>
-                work_per_thread(n_threads);
+                work_per_thread(Smolyak::n_threads);
             auto it = std::begin(work_per_thread);
 
             for (auto &i : arg)
@@ -603,8 +598,7 @@ namespace Smolyak
                     std::get<0>(i.second) = it_->second;
                 else
                 {
-                    std::get<0>(inner_product_.emplace
-                            (i.first, std::numeric_limits<real_t>::signaling_NaN()));
+                    inner_product_.emplace(i.first, std::numeric_limits<real_t>::signaling_NaN());
                     it->emplace_back(i.first, std::get<0>(i.second));
                     ++it;
                     if (it == std::end(work_per_thread))
@@ -1238,7 +1232,7 @@ namespace Smolyak
         std::vector<real_t> u, c;
         try
         {
-            u = Invocable::evaluate(arg0, coordinates);
+            u = Invocable::evaluate(arg0, coordinates, Smolyak::n_threads);
         }
 
         catch (Core::missing_data<std::vector<primary_coordinate_type>> &e)
@@ -1249,7 +1243,7 @@ namespace Smolyak
 
         try
         {
-            c = Invocable::evaluate(arg1, new_coordinates);
+            c = Invocable::evaluate(arg1, new_coordinates, Smolyak::n_threads);
         }
 
         catch (Core::missing_data<std::vector<primary_coordinate_type>> &e)
@@ -1441,7 +1435,7 @@ namespace Smolyak
     template<class function_type, class cost_function_type, smolyak_traits_c... traits_types>
     template<index_t i_variate>
     index_t smolyak_approximation<function_type, cost_function_type, traits_types...>::
-        operator_type:: homomorphism_apparatus_maximum_size(index_t size, index_t max_size,
+        operator_type::homomorphism_apparatus_maximum_size(index_t size, index_t max_size,
             const homomorphism_c auto &...homomorphisms) const
             requires(sizeof...(homomorphisms) == n_variates)
     {

@@ -14,6 +14,14 @@ namespace Smolyak
     using Arithmetic::negative_1;
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    //
+#ifdef SMOLYAK_N_THREADS
+    const index_t n_threads = SMOLYAK_N_THREADS;
+#else
+    const index_t n_threads = std::thread::hardware_concurrency();
+#endif
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
     namespace Apparatus
     {
