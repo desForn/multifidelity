@@ -1068,6 +1068,7 @@ namespace Smolyak
 
             return error_ret;
         }
+
         if (arg & verbosity::forward_neighborhood)
         {
             Print::println("Forward_neighborhood:");
