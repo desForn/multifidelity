@@ -14,7 +14,7 @@ namespace Smolyak
     using Arithmetic::negative_1;
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
-    //
+    
 #ifdef SMOLYAK_N_THREADS
     const index_t n_threads = SMOLYAK_N_THREADS;
 #else
@@ -111,10 +111,14 @@ namespace Smolyak
                 not smolyak_traits_non_trivial_linear_operator_c<smolyak_traits_type>;
 
         template<class smolyak_traits_type>
+        concept smolyak_traits_ignore_inner_product_c =
+            requires { requires smolyak_traits_type::ignore_inner_product; };
+
+        template<class smolyak_traits_type>
         concept smolyak_traits_inner_product_c =
                 smolyak_traits_c<smolyak_traits_type> and
-        requires(smolyak_traits_type smolyak_traits, index_t level,
-                std::span<const real_t> const_span)
+                not smolyak_traits_ignore_inner_product_c<smolyak_traits_type> and
+        requires(smolyak_traits_type smolyak_traits, index_t level)
         {
             requires homomorphism_c<typename smolyak_traits_type::embedding_type>;
 

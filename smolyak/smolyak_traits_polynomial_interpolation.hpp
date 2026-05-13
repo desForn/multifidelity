@@ -8,7 +8,8 @@
 
 namespace Smolyak::Smolyak_traits
 {
-    template<Sampling::sampling_c sampling_type, bool incremental_ = true>
+    template<Sampling::sampling_c sampling_type, bool incremental_ = true,
+        bool ignore_inner_product_ = false>
     class polynomial_interpolation
     {
     public:
@@ -21,11 +22,14 @@ namespace Smolyak::Smolyak_traits
         using secondary_domain = primary_domain;
         using initialiser_type = void;
         static constexpr bool incremental = incremental_;
+        static constexpr bool ignore_inner_product = ignore_inner_product_;
 
         class embedding_type;
         class dual_embedding_type;
         template<class function_type>
-        class integrate_homomorphism_type;
+        class integration_homomorphism_type;
+        class differentiation_homomorphism_type;
+        class cosine_transform_homomorphism_type;
 
     private:
         static constexpr auto one_function = [](real_t) -> real_t { return 1; };
@@ -69,32 +73,37 @@ namespace Smolyak::Smolyak_traits
             { return embedding_type{destination_level}; }
         dual_embedding_type dual_embedding(index_t destination_level) const
             { return dual_embedding_type{destination_level};}
-        integrate_homomorphism_type<decltype(one_function)> integrate_homomorphism() const
-            { return integrate_homomorphism_type<decltype(one_function)>{one_function, 0}; }
-        integrate_homomorphism_type<decltype(one_function)> integrate_homomorphism
+        integration_homomorphism_type<decltype(one_function)> integration_homomorphism() const
+            { return integration_homomorphism_type<decltype(one_function)>{one_function, 0}; }
+        integration_homomorphism_type<decltype(one_function)> integration_homomorphism
             (index_t increased_accuracy) const
-            { return integrate_homomorphism_type<decltype(one_function)>
+            { return integration_homomorphism_type<decltype(one_function)>
                 {one_function, increased_accuracy}; }
         template<class invocable_type>
         requires(Invocable::invocable_c<invocable_type, real_t(real_t)>)
-        integrate_homomorphism_type<invocable_type> integrate_homomorphism
+        integration_homomorphism_type<invocable_type> integration_homomorphism
             (invocable_type &&invocable) const
-            { return integrate_homomorphism_type{std::forward<invocable_type>(invocable)}; }
+            { return integration_homomorphism_type{std::forward<invocable_type>(invocable)}; }
         template<class invocable_type>
         requires(Invocable::invocable_c<invocable_type, real_t(real_t)>)
-        integrate_homomorphism_type<invocable_type> integrate_homomorphism
+        integration_homomorphism_type<invocable_type> integration_homomorphism
         (invocable_type &&invocable, index_t increased_accuracy) const
         {
-            return integrate_homomorphism_type
+            return integration_homomorphism_type
                 {std::forward<invocable_type>(invocable), increased_accuracy};
         }
+        differentiation_homomorphism_type differentiation_homomorphism() const
+            { return differentiation_homomorphism_type{}; }
+        cosine_transform_homomorphism_type cosine_transform_homomorphism() const
+            { return cosine_transform_homomorphism_type{}; }
     };
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
-    class polynomial_interpolation<sampling_type, incremental>::embedding_type
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    class polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        embedding_type
     {
     private:
         const index_t destination_level_;
@@ -125,8 +134,9 @@ namespace Smolyak::Smolyak_traits
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
-    class polynomial_interpolation<sampling_type, incremental>::dual_embedding_type
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    class polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        dual_embedding_type
     {
     private:
         using quadrature_type = Polynomial::quadrature_weights<sampling_type>;
@@ -162,9 +172,10 @@ namespace Smolyak::Smolyak_traits
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
     template<class function_t>
-    class polynomial_interpolation<sampling_type, incremental>::integrate_homomorphism_type
+    class polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        integration_homomorphism_type
     {
         static_assert(Invocable::invocable_c<function_t, real_t(real_t)>);
     public:
@@ -177,16 +188,17 @@ namespace Smolyak::Smolyak_traits
         index_t increased_accuracy_;
 
     public:
-        integrate_homomorphism_type() = delete;
-        ~integrate_homomorphism_type() = default;
+        integration_homomorphism_type() = delete;
+        ~integration_homomorphism_type() = default;
 
-        integrate_homomorphism_type(const integrate_homomorphism_type &) = default;
-        integrate_homomorphism_type &operator=(const integrate_homomorphism_type &) = default;
+        integration_homomorphism_type(const integration_homomorphism_type &) = default;
+        integration_homomorphism_type &operator=(const integration_homomorphism_type &) = default;
 
-        integrate_homomorphism_type(integrate_homomorphism_type &&) noexcept = default;
-        integrate_homomorphism_type &operator=(integrate_homomorphism_type &&) noexcept = default;
+        integration_homomorphism_type(integration_homomorphism_type &&) noexcept = default;
+        integration_homomorphism_type &operator=
+            (integration_homomorphism_type &&) noexcept = default;
 
-        integrate_homomorphism_type(function_type function, index_t increased_accuracy = 0) :
+        integration_homomorphism_type(function_type function, index_t increased_accuracy = 0) :
             function_{std::move(function)}, increased_accuracy_{increased_accuracy} {}
 
         // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
@@ -200,8 +212,69 @@ namespace Smolyak::Smolyak_traits
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
-    void polynomial_interpolation<sampling_type, incremental>::linear_operator
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    class polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        differentiation_homomorphism_type
+    {
+        static_assert(std::same_as<sampling_type, Sampling::chebyshev_lobatto> or
+                  std::same_as<sampling_type, Sampling::exponential<Sampling::chebyshev_lobatto>>,
+                "Only implemented for Chebyshev polynomials.");
+
+    public:
+        differentiation_homomorphism_type() = default;
+        ~differentiation_homomorphism_type() = default;
+
+        differentiation_homomorphism_type(const differentiation_homomorphism_type &) = default;
+        differentiation_homomorphism_type &operator=
+            (const differentiation_homomorphism_type &) = default;
+
+        differentiation_homomorphism_type(differentiation_homomorphism_type &&) noexcept = default;
+        differentiation_homomorphism_type &operator=
+            (differentiation_homomorphism_type &&) noexcept = default;
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    public:
+        void operator()
+            (index_t, index_t, std::span<const field_type>, std::span<field_type>) const;
+        index_t input_size(index_t level) const { return sampling_type::n_points(level); }
+        index_t output_size(index_t level) const { return sampling_type::n_points(level); }
+    };
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    class polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        cosine_transform_homomorphism_type
+    {
+    public:
+        cosine_transform_homomorphism_type() = default;
+        ~cosine_transform_homomorphism_type() = default;
+
+        cosine_transform_homomorphism_type
+            (const cosine_transform_homomorphism_type &) = default;
+        cosine_transform_homomorphism_type &operator=
+            (const cosine_transform_homomorphism_type &) = default;
+
+        cosine_transform_homomorphism_type
+            (cosine_transform_homomorphism_type &&) noexcept = default;
+        cosine_transform_homomorphism_type &operator=
+            (cosine_transform_homomorphism_type &&) noexcept = default;
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    public:
+        void operator()
+            (index_t, index_t, std::span<const field_type>, std::span<field_type>) const;
+        index_t input_size(index_t level) const { return sampling_type::n_points(level); }
+        index_t output_size(index_t level) const { return sampling_type::n_points(level); }
+    };
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    void polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        linear_operator
         (index_t stride, std::span<const field_type> input_span, std::span<field_type> output_span)
         const requires(incremental)
     {
@@ -269,9 +342,9 @@ namespace Smolyak::Smolyak_traits
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
-    polynomial_interpolation<sampling_type, incremental>::embedding_type::embedding_type
-            (index_t destination_level) :
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        embedding_type::embedding_type(index_t destination_level) :
             destination_level_
                     {sampling_type::required_level(
                             2 * sampling_type::n_points(destination_level) - 1)},
@@ -280,10 +353,10 @@ namespace Smolyak::Smolyak_traits
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
-    void polynomial_interpolation<sampling_type, incremental>::embedding_type::operator()
-        (index_t level, index_t stride, std::span<const field_type> input_span,
-        std::span<field_type> output_span) const
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    void polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        embedding_type::operator()(index_t level, index_t stride,
+            std::span<const field_type> input_span, std::span<field_type> output_span) const
     {
         ASSERT_ASSUME(level <= destination_level_);
         ASSERT_ASSUME(std::size(input_span) == (input_size(level) - 1) * stride + 1);
@@ -305,9 +378,9 @@ namespace Smolyak::Smolyak_traits
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
-    polynomial_interpolation<sampling_type, incremental>::dual_embedding_type::dual_embedding_type
-            (index_t destination_level) :
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        dual_embedding_type::dual_embedding_type(index_t destination_level) :
             destination_level_
                     {sampling_type::required_level(
                             2 * sampling_type::n_points(destination_level) - 1)},
@@ -317,10 +390,10 @@ namespace Smolyak::Smolyak_traits
 
     // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
-    void polynomial_interpolation<sampling_type, incremental>::dual_embedding_type::operator()
-        (index_t level, index_t stride, std::span<const field_type> input_span,
-        std::span<field_type> output_span) const
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    void polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        dual_embedding_type::operator()(index_t level, index_t stride,
+            std::span<const field_type> input_span, std::span<field_type> output_span) const
     {
         ASSERT_ASSUME(level <= destination_level_);
         ASSERT_ASSUME(std::size(input_span) == (input_size(level) - 1) * stride + 1);
@@ -344,10 +417,13 @@ namespace Smolyak::Smolyak_traits
         return;
     }
 
-    template<Sampling::sampling_c sampling_type, bool incremental>
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
     template<class function_t>
-    void polynomial_interpolation<sampling_type, incremental>::
-        integrate_homomorphism_type<function_t>::operator()
+    void polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        integration_homomorphism_type<function_t>::operator()
         (index_t level, index_t stride, std::span<const field_type> input_span,
         std::span<field_type> output_span) const
     {
@@ -404,6 +480,83 @@ namespace Smolyak::Smolyak_traits
                     
                 ++c;
             }
+        }
+
+        return;
+    }
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    void polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        differentiation_homomorphism_type::operator()
+        (index_t level, index_t stride, std::span<const field_type> input_span,
+        std::span<field_type> output_span) const
+    {
+        ASSERT_ASSUME(std::size(input_span) == (input_size(level) - 1) * stride + 1);
+        ASSERT_ASSUME(std::size(output_span) == std::size(input_span));
+
+        for (auto it = std::begin(output_span); it < std::end(output_span); it += stride)
+            *it = 0;
+
+        index_t n = input_size(level) - 1;
+
+        auto c = [n](index_t i) -> real_t { return (i == 0 or i == n) ? 2 : 1; };
+
+        sampling_type sampling{level};
+
+        ASSERT_ASSUME(sampling.n_points() == n + 1);
+
+        auto x = [&sampling](index_t i) -> real_t { return sampling[i]; };
+
+        for (index_t i = 0; i != n + 1; ++i)
+            for (index_t j = 0; j != n + 1; ++j)
+            {
+                real_t a;
+
+                if (i == j)
+                {
+                    if (i == 0)
+                        a = (2 * n * n + 1) / 6;
+                    else if (i == n)
+                        a = -(2 * n * n + 1) / 6;
+                    else
+                        a = -x(i) / (2 * (1 - x(i) * x(i)));
+                }
+
+                else
+                    a = c(i) / c(j) * (((i + j) % 2 == 0) ? 1 : -1) / (x(i) - x(j));
+
+                output_span[i * stride] += a * input_span[j * stride];
+            }
+
+        return;
+    }
+
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+    // **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** //
+
+    template<Sampling::sampling_c sampling_type, bool incremental, bool ignore_inner_product>
+    void polynomial_interpolation<sampling_type, incremental, ignore_inner_product>::
+        cosine_transform_homomorphism_type::operator() (index_t level, index_t stride,
+            std::span<const field_type> input_span, std::span<field_type> output_span) const
+    {
+        ASSERT_ASSUME(std::size(input_span) == (input_size(level) - 1) * stride + 1);
+        ASSERT_ASSUME(std::size(output_span) == (output_size(level) - 1) * stride + 1);
+
+        auto a = std::ranges::stride_view{input_span, static_cast<long int>(stride)};
+        std::vector<field_type> b(std::size(a));
+        std::copy(std::cbegin(a), std::cend(a), std::begin(b));
+        polynomial_type p{b, level};
+
+        Polynomial::chebyshev_polynomial_i_kind q = discrete_cosine_transform(p);
+
+        auto it = std::begin(output_span);
+        for (const auto &i : q.coefficients())
+        {
+            *it = i;
+            it += stride;
         }
 
         return;

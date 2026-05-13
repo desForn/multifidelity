@@ -38,7 +38,7 @@ namespace Smolyak
 
     private:
         static constexpr std::array<index_t, n_variates> incremental_
-                {(traits_types::incremental ? 1 : 2)...};
+            {(traits_types::incremental ? 1 : 2)...};
 
         using secondary_coordinate_type_apparatus =
             Utility::non_void_tuple<typename traits_types::secondary_domain...>;
@@ -52,12 +52,14 @@ namespace Smolyak
 
         static constexpr bool void_secondary_domain =
             std::same_as<secondary_coordinate_type_apparatus, void>;
+
         using secondary_coordinate_type =
                 std::conditional_t<void_secondary_domain, void_type,
                                    secondary_coordinate_type_apparatus>;
 
         static constexpr bool void_initialiser =
             std::same_as<traits_initialiser_type_apparatus, void>;
+
         using traits_initialiser_type =
             std::conditional_t<void_initialiser, void_type, traits_initialiser_type_apparatus>;
 
@@ -73,8 +75,9 @@ namespace Smolyak
             real_t error_estimation;
         };
 
-    private:
         class operator_type;
+
+    private:
         using level_set_type = std::unordered_set<level_type, Core::hash>;
         using operator_map_type = std::unordered_map<level_type, operator_type, Core::hash>;
         using inner_product_map_type =
@@ -102,8 +105,8 @@ namespace Smolyak
         smolyak_approximation() = delete;
         ~smolyak_approximation() = default;
 
-        smolyak_approximation(const smolyak_approximation &) = delete;
-        smolyak_approximation &operator=(const smolyak_approximation &) = delete;
+        smolyak_approximation(const smolyak_approximation &) = default;
+        smolyak_approximation &operator=(const smolyak_approximation &) = default;
 
         smolyak_approximation(smolyak_approximation &&) noexcept = default;
         smolyak_approximation &operator=(smolyak_approximation &&) noexcept = default;
@@ -250,8 +253,8 @@ namespace Smolyak
         operator_type() = delete;
         ~operator_type() = default;
 
-        operator_type(const operator_type &) = delete;
-        operator_type &operator=(const operator_type &) = delete;
+        operator_type(const operator_type &) = default;
+        operator_type &operator=(const operator_type &) = default;
 
         operator_type(operator_type &&) noexcept = default;
         operator_type &operator=(operator_type &&) noexcept = default;
